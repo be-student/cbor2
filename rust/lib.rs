@@ -394,14 +394,14 @@ mod _cbor2 {
     fn init(m: &Bound<'_, PyModule>) -> PyResult<()> {
         m.add(
             "CBOREncodeTypeError",
-            m.py().get_type::<CBOREncodeTypeError>(),
+            CBOREncodeTypeError::type_object(m.py())?,
         )?;
         m.add(
             "CBOREncodeValueError",
-            m.py().get_type::<CBOREncodeValueError>(),
+            CBOREncodeValueError::type_object(m.py())?,
         )?;
-        m.add("CBORDecodeError", m.py().get_type::<CBORDecodeError>())?;
-        m.add("CBORDecodeEOF", m.py().get_type::<CBORDecodeEOF>())?;
+        m.add("CBORDecodeError", CBORDecodeError::type_object(m.py())?)?;
+        m.add("CBORDecodeEOF", CBORDecodeEOF::type_object(m.py())?)?;
 
         // Register cbor2.FrozenDict as a Mapping subclass
         let py = m.py();
