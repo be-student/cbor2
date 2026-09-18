@@ -1,5 +1,6 @@
 import platform
 import sys
+from typing import TYPE_CHECKING
 
 import pytest
 
@@ -18,6 +19,9 @@ from cbor2 import (
 if sys.hexversion < 51314855:
     from cbor2 import frozendict
 
+if TYPE_CHECKING:
+    decode_error_as_value_error: ValueError = CBORDecodeError("sentinel")
+
 
 @pytest.mark.parametrize(
     "exception_type, expected_bases",
@@ -31,6 +35,7 @@ if sys.hexversion < 51314855:
 def test_exception_hierarchy(
     exception_type: type[Exception], expected_bases: tuple[type[Exception], ...]
 ) -> None:
+    assert exception_type.__bases__ == expected_bases
     assert all(issubclass(exception_type, base) for base in expected_bases)
 
 

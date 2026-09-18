@@ -7,10 +7,11 @@ This library adheres to `Semantic Versioning 2.0 <http://semver.org/>`_.
 
 **UNRELEASED**
 
-- Restored the built-in exception ancestry declared by the public type interface and provided by
-  cbor2 5.x: :exc:`CBORDecodeError` is again a :exc:`ValueError`, encoder type and value errors are
-  again :exc:`TypeError` and :exc:`ValueError` subclasses, and :exc:`CBORDecodeEOF` is again an
-  :exc:`EOFError` (`#299 <https://github.com/agronholm/cbor2/issues/299>`_)
+- Restored the built-in exception ancestry from cbor2 5.x while preserving the cbor2 6 exception
+  names: :exc:`CBORDecodeError` now carries the :exc:`ValueError` ancestry of the removed
+  ``CBORDecodeValueError``, encoder type and value errors are again :exc:`TypeError` and
+  :exc:`ValueError` subclasses, and :exc:`CBORDecodeEOF` is again an :exc:`EOFError`
+  (`#299 <https://github.com/agronholm/cbor2/issues/299>`_)
 - Fixed :class:`CBORSimpleValue` hashing inconsistently with the integer it compares equal to
   (`#334 <https://github.com/agronholm/cbor2/pull/334>`_; PR by @sahvx655-wq)
 - Fixed canonical encoding with value sharing enabled emitting shared references to container
