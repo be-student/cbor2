@@ -34,7 +34,9 @@ By default, CBOR byte strings are decoded as :class:`bytes`. Pass ``mutable_byte
     mutable_data[0] = ord('D')
 
 Byte strings in immutable positions, such as map keys and semantic tag payloads that require
-bytes, remain :class:`bytes`.
+bytes, remain :class:`bytes`. String references also respect the context of each occurrence;
+mutable byte strings decoded from string references use independent buffers. Explicit shared
+value references continue to preserve object identity.
 
 Date/time handling
 ------------------

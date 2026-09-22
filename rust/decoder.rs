@@ -1790,7 +1790,14 @@ impl CBORDecoder {
                             _ => length >= 11,
                         }
                     {
-                        namespace.push(string.clone());
+                        // String references preserve the encoded value, not the identity of
+                        // a mutable output buffer. Keep an immutable snapshot in the namespace.
+                        let stored = if let Ok(bytes) = string.cast::<PyByteArray>() {
+                            PyBytes::new(py, &bytes.to_vec()).into_any()
+                        } else {
+                            string.clone()
+                        };
+                        namespace.push(stored);
                     }
                     value = Some(string);
                 }
@@ -1798,9 +1805,18 @@ impl CBORDecoder {
                     frames
                         .pop()
                         .expect("  received string reference but there are no frames on the stack");
+                    current_immutable = frames.last().map_or(immutable, |frame| frame.immutable);
                     if let Some(namespace) = string_namespaces.last() {
                         if let Some(string) = namespace.get(index) {
-                            value = Some(string.clone());
+                            value = Some(if self.mutable_bytes && !current_immutable {
+                                if let Ok(bytes) = string.cast::<PyBytes>() {
+                                    PyByteArray::new(py, bytes.as_bytes()).into_any()
+                                } else {
+                                    string.clone()
+                                }
+                            } else {
+                                string.clone()
+                            });
                         } else {
                             return Err(CBORDecodeError::new_err(format!(
                                 "string reference {index} not found"
@@ -1811,9 +1827,6 @@ impl CBORDecoder {
                             "string reference outside of namespace",
                         ));
                     }
-                    current_immutable = frames
-                        .last()
-                        .map_or(current_immutable, |frame| frame.immutable);
                 }
                 Ok(Shareable) => {
                     add_frame(

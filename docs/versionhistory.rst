@@ -8,7 +8,8 @@ This library adheres to `Semantic Versioning 2.0 <http://semver.org/>`_.
 **UNRELEASED**
 
 - Added the ``mutable_bytes`` parameter to :class:`CBORDecoder`, :func:`load` and :func:`loads`,
-  allowing ordinary CBOR byte strings to be decoded as :class:`bytearray`
+  allowing ordinary CBOR byte strings to be decoded as :class:`bytearray`, including independent
+  buffers for string references while preserving immutable map keys and semantic tag payloads
   (`#266 <https://github.com/agronholm/cbor2/issues/266>`_; PR by @be-student)
 - Fixed :class:`CBORSimpleValue` hashing inconsistently with the integer it compares equal to
   (`#334 <https://github.com/agronholm/cbor2/pull/334>`_; PR by @sahvx655-wq)

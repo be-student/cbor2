@@ -485,6 +485,61 @@ def test_mutable_bytestrings_preserve_semantic_decoding() -> None:
     assert loads(b"\xc2\x42\x01\x00", mutable_bytes=True) == 256
 
 
+@pytest.mark.parametrize("stream", [False, True], ids=["loads", "load"])
+@pytest.mark.parametrize(
+    "payload, expected_types",
+    [
+        ("8243616263a1d8190001", (bytearray, dict)),
+        ("82a14361626301d81900", (dict, bytearray)),
+        ("8243616263c2d81900", (bytearray, int)),
+    ],
+    ids=["reference-as-key", "key-reference-as-value", "reference-as-bignum"],
+)
+def test_mutable_bytestring_references_respect_context(
+    payload: str, expected_types: tuple[type, type], stream: bool
+) -> None:
+    data = bytes.fromhex("d90100" + payload)
+    result = load(BytesIO(data), mutable_bytes=True) if stream else loads(data, mutable_bytes=True)
+
+    assert tuple(type(value) for value in result) == expected_types
+    if expected_types[1] is int:
+        assert result[1] == int.from_bytes(b"abc", "big")
+    elif expected_types[0] is dict:
+        assert result == [{b"abc": 1}, bytearray(b"abc")]
+    else:
+        assert result == [bytearray(b"abc"), {b"abc": 1}]
+
+
+def test_mutable_bytestring_references_do_not_alias() -> None:
+    result = loads(bytes.fromhex("d901008343616263d81900d81900"), mutable_bytes=True)
+
+    assert all(type(value) is bytearray for value in result)
+    result[0][0] = ord("X")
+    result[1][1] = ord("Y")
+    assert result == [bytearray(b"Xbc"), bytearray(b"aYc"), bytearray(b"abc")]
+
+
+def test_mutable_bytestring_reference_survives_hook_mutation() -> None:
+    def object_hook(value: Mapping[Any, Any], immutable: bool) -> Mapping[Any, Any]:
+        value[0][0] = ord("X")
+        return value
+
+    result = loads(
+        bytes.fromhex("d9010082a10043616263d81900"),
+        mutable_bytes=True,
+        object_hook=object_hook,
+    )
+
+    assert result == [{0: bytearray(b"Xbc")}, bytearray(b"abc")]
+
+
+def test_mutable_bytestring_shared_values_preserve_identity() -> None:
+    result = loads(bytes.fromhex("82d81c43616263d81d00"), mutable_bytes=True)
+
+    assert type(result[0]) is bytearray
+    assert result[0] is result[1]
+
+
 def test_indefinite_string_many_chunks() -> None:
     # Same quadratic concatenation issue for indefinite-length text strings; the final chunk
     # carries a multi-byte character to exercise the join path.
